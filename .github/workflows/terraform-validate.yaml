@@ -45,8 +45,8 @@ jobs:
 
       - name: TFLint — IaC Static Analysis & Best Practices
         run: |
-          tflint --init
-          tflint --recursive
+          tflint --init --config="$(pwd)/.tflint.hcl"
+          tflint --recursive --config="$(pwd)/.tflint.hcl"
 
       - name: Checkov — IaC SAST Security Scan
         uses: bridgecrewio/checkov-action@v12
