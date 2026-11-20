@@ -65,3 +65,41 @@ func TestMasterKeyMiddleware(t *testing.T) {
 		t.Errorf("Esperado status 200, obteve %d", recAuthorized.Code)
 	}
 }
+
+func TestSimulateFailureAndRecover(t *testing.T) {
+	app := &App{MasterKey: "secret-master"}
+
+	// Ativa modo de falha via /admin/simulate-failure
+	simReq := httptest.NewRequest(http.MethodPost, "/admin/simulate-failure", nil)
+	simReq.Header.Set("Authorization", "Bearer secret-master")
+	simRec := httptest.NewRecorder()
+	app.masterKeyAuthMiddleware(http.HandlerFunc(app.simulateFailureHandler)).ServeHTTP(simRec, simReq)
+	if simRec.Code != http.StatusOK || !app.failMode.Load() {
+		t.Fatalf("Esperado ativacao do modo de falha (200), obteve status=%d failMode=%v", simRec.Code, app.failMode.Load())
+	}
+
+	// Durante a falha simulada, /validate deve responder HTTP 500
+	valReq := httptest.NewRequest(http.MethodGet, "/validate", nil)
+	valRec := httptest.NewRecorder()
+	app.validateKeyHandler(valRec, valReq)
+	if valRec.Code != http.StatusInternalServerError {
+		t.Errorf("Esperado status 500 durante failMode, obteve %d", valRec.Code)
+	}
+
+	// Recupera via /admin/recover
+	recReq := httptest.NewRequest(http.MethodPost, "/admin/recover", nil)
+	recReq.Header.Set("Authorization", "Bearer secret-master")
+	recRec := httptest.NewRecorder()
+	app.masterKeyAuthMiddleware(http.HandlerFunc(app.recoverHandler)).ServeHTTP(recRec, recReq)
+	if recRec.Code != http.StatusOK || app.failMode.Load() {
+		t.Fatalf("Esperado desativacao do modo de falha (200), obteve status=%d failMode=%v", recRec.Code, app.failMode.Load())
+	}
+
+	// Apos recuperacao, requisicao sem Authorization volta a retornar 401 (nao mais 500)
+	valReqAfter := httptest.NewRequest(http.MethodGet, "/validate", nil)
+	valRecAfter := httptest.NewRecorder()
+	app.validateKeyHandler(valRecAfter, valReqAfter)
+	if valRecAfter.Code != http.StatusUnauthorized {
+		t.Errorf("Esperado status 401 apos recover, obteve %d", valRecAfter.Code)
+	}
+}

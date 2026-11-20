@@ -431,3 +431,45 @@ resource "helm_release" "keda" {
 
   depends_on = [helm_release.metrics_server]
 }
+
+# ==============================================================================
+# 7. Namespace e Secrets de Observabilidade (Datadog APM, PagerDuty & Grafana)
+# ==============================================================================
+resource "kubernetes_namespace_v1" "observability" {
+  metadata {
+    name = "observability"
+    labels = {
+      project    = "togglemaster"
+      managed-by = "terraform"
+    }
+  }
+}
+
+resource "kubernetes_secret_v1" "observability_secrets" {
+  metadata {
+    name      = "observability-secrets"
+    namespace = kubernetes_namespace_v1.observability.metadata[0].name
+  }
+
+  data = {
+    DD_API_KEY            = var.datadog_api_key
+    DD_SITE               = var.datadog_site
+    PAGERDUTY_ROUTING_KEY = var.pagerduty_routing_key
+  }
+
+  type = "Opaque"
+}
+
+resource "kubernetes_secret_v1" "grafana_admin" {
+  metadata {
+    name      = "grafana-admin"
+    namespace = kubernetes_namespace_v1.observability.metadata[0].name
+  }
+
+  data = {
+    admin-user     = "admin"
+    admin-password = var.grafana_admin_password
+  }
+
+  type = "Opaque"
+}

@@ -42,3 +42,30 @@ variable "service_api_key" {
   default     = "tm_key_evaluation_service_secret"
   sensitive   = true
 }
+
+variable "datadog_api_key" {
+  description = "API Key do Datadog para exportação de traces e métricas APM via OTel Collector"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "datadog_site" {
+  description = "Site regional do Datadog (ex.: datadoghq.com)"
+  type        = string
+  default     = "datadoghq.com"
+}
+
+variable "pagerduty_routing_key" {
+  description = "Integration Key (Events API v2) do serviço ToggleMaster no PagerDuty"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "grafana_admin_password" {
+  description = "Senha do administrador do Grafana"
+  type        = string
+  default     = "ToggleMasterGrafana2026!"
+  sensitive   = true
+}

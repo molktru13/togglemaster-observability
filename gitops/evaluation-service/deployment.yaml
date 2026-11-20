@@ -7,6 +7,10 @@ data:
   PORT: "8004"
   FLAG_SERVICE_URL: http://flag-service.togglemaster-flags.svc.cluster.local:8002
   TARGETING_SERVICE_URL: http://targeting-service.togglemaster-targeting.svc.cluster.local:8003
+  OTEL_SERVICE_NAME: evaluation-service
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector.observability.svc.cluster.local:4318
+  OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+  OTEL_RESOURCE_ATTRIBUTES: deployment.environment=production,service.namespace=togglemaster
 ---
 apiVersion: apps/v1
 kind: Deployment

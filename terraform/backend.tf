@@ -1,11 +1,11 @@
 terraform {
   required_version = ">= 1.10.0"
 
-  # Requisito de Estado da Fase 3:
+  # Requisito de Estado da Fase 4:
   # Backend Remoto no Amazon S3 com Lock nativo (use_lockfile = true)
   backend "s3" {
     bucket       = "togglemaster-tfstate-290528720221"
-    key          = "fase3/terraform.tfstate"
+    key          = "fase4/terraform.tfstate"
     region       = "us-east-1"
     encrypt      = true
     use_lockfile = true

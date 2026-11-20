@@ -33,7 +33,7 @@ variable "private_subnet_ids" {
 variable "node_instance_types" {
   description = "Tipos de instância EC2 do Node Group"
   type        = list(string)
-  default     = ["t3.small"]
+  default     = ["t3.medium"]
 }
 
 variable "desired_size" {

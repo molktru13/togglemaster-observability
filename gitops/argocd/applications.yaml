@@ -8,7 +8,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/molktru13/togglemaster-terraform-iam.git
+    repoURL: https://github.com/molktru13/togglemaster-observability.git
     targetRevision: main
     path: gitops/auth-service
   destination:
@@ -29,7 +29,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/molktru13/togglemaster-terraform-iam.git
+    repoURL: https://github.com/molktru13/togglemaster-observability.git
     targetRevision: main
     path: gitops/flag-service
   destination:
@@ -50,7 +50,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/molktru13/togglemaster-terraform-iam.git
+    repoURL: https://github.com/molktru13/togglemaster-observability.git
     targetRevision: main
     path: gitops/targeting-service
   destination:
@@ -71,7 +71,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/molktru13/togglemaster-terraform-iam.git
+    repoURL: https://github.com/molktru13/togglemaster-observability.git
     targetRevision: main
     path: gitops/evaluation-service
   destination:
@@ -99,7 +99,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/molktru13/togglemaster-terraform-iam.git
+    repoURL: https://github.com/molktru13/togglemaster-observability.git
     targetRevision: main
     path: gitops/analytics-service
   destination:
@@ -116,3 +116,143 @@ spec:
       selfHeal: true
     syncOptions:
       - RespectIgnoreDifferences=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: observability-loki
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: https://grafana.github.io/helm-charts
+      chart: loki
+      targetRevision: 6.24.0
+      helm:
+        valueFiles:
+          - $values/gitops/observability/values/loki-values.yaml
+    - repoURL: https://github.com/molktru13/togglemaster-observability.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: observability
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: observability-otel-collector
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: https://open-telemetry.github.io/opentelemetry-helm-charts
+      chart: opentelemetry-collector
+      targetRevision: 0.111.0
+      helm:
+        valueFiles:
+          - $values/gitops/observability/values/otel-collector-values.yaml
+    - repoURL: https://github.com/molktru13/togglemaster-observability.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: observability
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: observability-otel-logs-agent
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: https://open-telemetry.github.io/opentelemetry-helm-charts
+      chart: opentelemetry-collector
+      targetRevision: 0.111.0
+      helm:
+        valueFiles:
+          - $values/gitops/observability/values/otel-logs-agent-values.yaml
+    - repoURL: https://github.com/molktru13/togglemaster-observability.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: observability
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: observability-prometheus-grafana
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: https://prometheus-community.github.io/helm-charts
+      chart: kube-prometheus-stack
+      targetRevision: 65.1.1
+      helm:
+        valueFiles:
+          - $values/gitops/observability/values/kube-prometheus-stack-values.yaml
+    - repoURL: https://github.com/molktru13/togglemaster-observability.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: observability
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: observability-config
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/molktru13/togglemaster-observability.git
+    targetRevision: main
+    path: gitops/observability/manifests
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: observability
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

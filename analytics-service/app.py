@@ -9,6 +9,10 @@ import boto3
 from botocore.exceptions import NoCredentialsError, ClientError
 from flask import Flask, jsonify, request
 from dotenv import load_dotenv
+from opentelemetry import trace
+from opentelemetry.propagate import extract
+from opentelemetry.trace import SpanKind
+from telemetry import init_telemetry
 
 # Configura o logging
 logging.basicConfig(
@@ -52,33 +56,53 @@ if not IS_TESTING:
         sys.exit(1)
 
 
+def _extract_trace_context(message, body):
+    """Extrai o contexto W3C traceparent dos atributos SQS ou do payload JSON."""
+    msg_attrs = message.get('MessageAttributes') or {}
+    traceparent = msg_attrs.get('traceparent', {}).get('StringValue') or body.get('traceparent')
+    if not traceparent:
+        return None
+    return extract({'traceparent': traceparent})
+
+
 # --- SQS Worker ---
 def process_message(message):
     """Processa uma única mensagem SQS e a insere no DynamoDB"""
     try:
         log.info(f"Processando mensagem ID: {message['MessageId']}")
         body = json.loads(message['Body'])
+        parent_ctx = _extract_trace_context(message, body)
+        tracer = trace.get_tracer(__name__)
 
-        event_id = str(uuid.uuid4())
-        item = {
-            'event_id': {'S': event_id},
-            'user_id': {'S': body['user_id']},
-            'flag_name': {'S': body['flag_name']},
-            'result': {'BOOL': body['result']},
-            'timestamp': {'S': body['timestamp']}
-        }
+        with tracer.start_as_current_span(
+            "sqs.process toggle-master-events",
+            context=parent_ctx,
+            kind=SpanKind.CONSUMER,
+        ) as span:
+            span.set_attribute("messaging.system", "aws_sqs")
+            span.set_attribute("messaging.destination.name", "toggle-master-events")
+            span.set_attribute("flag.name", body.get('flag_name', ''))
 
-        dynamodb_client.put_item(
-            TableName=DYNAMODB_TABLE_NAME,
-            Item=item
-        )
+            event_id = str(uuid.uuid4())
+            item = {
+                'event_id': {'S': event_id},
+                'user_id': {'S': body['user_id']},
+                'flag_name': {'S': body['flag_name']},
+                'result': {'BOOL': body['result']},
+                'timestamp': {'S': body['timestamp']}
+            }
 
-        log.info(f"Evento {event_id} (Flag: {body['flag_name']}) salvo no DynamoDB.")
+            dynamodb_client.put_item(
+                TableName=DYNAMODB_TABLE_NAME,
+                Item=item
+            )
 
-        sqs_client.delete_message(
-            QueueUrl=SQS_QUEUE_URL,
-            ReceiptHandle=message['ReceiptHandle']
-        )
+            log.info(f"Evento {event_id} (Flag: {body['flag_name']}) salvo no DynamoDB.")
+
+            sqs_client.delete_message(
+                QueueUrl=SQS_QUEUE_URL,
+                ReceiptHandle=message['ReceiptHandle']
+            )
 
     except json.JSONDecodeError:
         log.error(f"Erro ao decodificar JSON da mensagem ID: {message['MessageId']}")
@@ -96,7 +120,8 @@ def sqs_worker_loop():
             response = sqs_client.receive_message(
                 QueueUrl=SQS_QUEUE_URL,
                 MaxNumberOfMessages=10,
-                WaitTimeSeconds=20
+                WaitTimeSeconds=20,
+                MessageAttributeNames=['All'],
             )
 
             messages = response.get('Messages', [])
@@ -118,6 +143,7 @@ def sqs_worker_loop():
 
 # --- Servidor Flask ---
 app = Flask(__name__)
+init_telemetry(app, "analytics-service")
 
 
 @app.route('/health')

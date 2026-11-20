@@ -8,6 +8,7 @@ from psycopg2.extras import RealDictCursor, Json
 from psycopg2.pool import SimpleConnectionPool
 from flask import Flask, request, jsonify
 from dotenv import load_dotenv
+from telemetry import init_telemetry
 
 # Configura o logging
 logging.basicConfig(level=logging.INFO)
@@ -17,6 +18,7 @@ log = logging.getLogger(__name__)
 load_dotenv()
 
 app = Flask(__name__)
+init_telemetry(app, "targeting-service")
 
 # --- Configuração ---
 DATABASE_URL = os.getenv("DATABASE_URL")

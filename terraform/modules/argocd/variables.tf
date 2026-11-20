@@ -79,3 +79,30 @@ variable "keda_irsa_role_arn" {
   description = "ARN da IAM Role IRSA do KEDA Operator"
   type        = string
 }
+
+variable "datadog_api_key" {
+  description = "API Key do Datadog para exportação OTLP"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "datadog_site" {
+  description = "Site do Datadog (ex.: datadoghq.com)"
+  type        = string
+  default     = "datadoghq.com"
+}
+
+variable "pagerduty_routing_key" {
+  description = "Integration Key (Events API v2) do PagerDuty"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "grafana_admin_password" {
+  description = "Senha do administrador do Grafana"
+  type        = string
+  default     = "ToggleMasterGrafana2026!"
+  sensitive   = true
+}

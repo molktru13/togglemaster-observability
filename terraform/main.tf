@@ -81,4 +81,8 @@ module "argocd" {
   evaluation_irsa_role_arn = module.iam.evaluation_irsa_role_arn
   analytics_irsa_role_arn  = module.iam.analytics_irsa_role_arn
   keda_irsa_role_arn       = module.iam.keda_irsa_role_arn
+  datadog_api_key          = var.datadog_api_key
+  datadog_site             = var.datadog_site
+  pagerduty_routing_key    = var.pagerduty_routing_key
+  grafana_admin_password   = var.grafana_admin_password
 }

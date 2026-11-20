@@ -1,0 +1,161 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: self-healing-sa
+  namespace: observability
+  labels:
+    app: self-healing-runbook
+    project: togglemaster
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: self-healing-restart-role
+  labels:
+    app: self-healing-runbook
+    project: togglemaster
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    resourceNames:
+      - auth-service
+      - flag-service
+      - targeting-service
+      - evaluation-service
+      - analytics-service
+    verbs: ["get", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: self-healing-restart-auth
+  namespace: togglemaster-auth
+subjects:
+  - kind: ServiceAccount
+    name: self-healing-sa
+    namespace: observability
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: self-healing-restart-role
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: self-healing-restart-flags
+  namespace: togglemaster-flags
+subjects:
+  - kind: ServiceAccount
+    name: self-healing-sa
+    namespace: observability
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: self-healing-restart-role
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: self-healing-restart-targeting
+  namespace: togglemaster-targeting
+subjects:
+  - kind: ServiceAccount
+    name: self-healing-sa
+    namespace: observability
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: self-healing-restart-role
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: self-healing-restart-evaluation
+  namespace: togglemaster-evaluation
+subjects:
+  - kind: ServiceAccount
+    name: self-healing-sa
+    namespace: observability
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: self-healing-restart-role
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: self-healing-restart-analytics
+  namespace: togglemaster-analytics
+subjects:
+  - kind: ServiceAccount
+    name: self-healing-sa
+    namespace: observability
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: self-healing-restart-role
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: self-healing-runbook
+  namespace: observability
+  labels:
+    app: self-healing-runbook
+    managed-by: argocd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: self-healing-runbook
+  template:
+    metadata:
+      labels:
+        app: self-healing-runbook
+    spec:
+      serviceAccountName: self-healing-sa
+      containers:
+        - name: self-healing-runbook
+          image: 290528720221.dkr.ecr.us-east-1.amazonaws.com/self-healing-runbook:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SELF_HEALING_COOLDOWN_SECONDS
+              value: "60"
+            - name: DEFAULT_TARGET_SERVICE
+              value: "auth-service"
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: 150m
+              memory: 192Mi
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: self-healing-runbook
+  namespace: observability
+  labels:
+    app: self-healing-runbook
+spec:
+  selector:
+    app: self-healing-runbook
+  ports:
+    - port: 8080
+      targetPort: 8080
+  type: ClusterIP

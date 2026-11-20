@@ -1,12 +1,13 @@
 variable "repositories" {
-  description = "Lista dos 5 repositórios ECR dos microsserviços"
+  description = "Lista dos repositórios ECR dos microsserviços e automação de Self-Healing"
   type        = list(string)
   default = [
     "auth-service",
     "flag-service",
     "targeting-service",
     "evaluation-service",
-    "analytics-service"
+    "analytics-service",
+    "self-healing-runbook"
   ]
 }
 

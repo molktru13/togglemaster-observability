@@ -6,6 +6,10 @@ metadata:
 data:
   AUTH_SERVICE_URL: http://auth-service.togglemaster-auth.svc.cluster.local:8001
   PORT: "8003"
+  OTEL_SERVICE_NAME: targeting-service
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector.observability.svc.cluster.local:4318
+  OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+  OTEL_RESOURCE_ATTRIBUTES: deployment.environment=production,service.namespace=togglemaster
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -39,10 +43,10 @@ spec:
           resources:
             requests:
               cpu: 50m
-              memory: 64Mi
+              memory: 128Mi
             limits:
               cpu: 250m
-              memory: 256Mi
+              memory: 384Mi
           readinessProbe:
             httpGet:
               path: /health
