@@ -116,7 +116,7 @@ jobs:
       - build-and-unit-test
       - linter-static-analysis
       - security-scan-sast-sca
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     steps:
       - name: Checkout do repositório completo
         uses: actions/checkout@v4

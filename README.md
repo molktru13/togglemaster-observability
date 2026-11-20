@@ -80,7 +80,7 @@ Toda a infraestrutura manual da Fase 2 foi substituída por código **Terraform*
 
 | Módulo Terraform | Caminho | Recursos Provisionados |
 |---|---|---|
-| **Bootstrap S3** | `terraform/bootstrap` | Bucket S3 `togglemaster-tfstate-290528720221` com **Versionamento**, **Criptografia AES-256** e Public Access Block para o Backend Remoto. |
+| **Bootstrap S3** | `terraform/bootstrap` | Bucket S3 `togglemaster-tfstate-740868193407` com **Versionamento**, **Criptografia AES-256** e Public Access Block para o Backend Remoto. |
 | **Backend Remoto** | `terraform/backend.tf` | Armazena `fase3/terraform.tfstate` no S3 com **`use_lockfile = true`** (State Locking nativo do S3). |
 | **Networking** | `terraform/modules/networking` | VPC `10.0.0.0/16`, 2 Subnets Públicas (`10.0.1.0/24`, `10.0.2.0/24`), 2 Subnets Privadas (`10.0.11.0/24`, `10.0.12.0/24`) em `us-east-1a`/`1b`, Internet Gateway, NAT Gateway com EIP, Route Tables e Security Groups dedicados (`5432` para RDS e `6379` para Redis). |
 | **IAM & IRSA** | `terraform/modules/iam` | **Opção B (Conta Pessoal):** Roles de IAM do Control Plane EKS e Node Group + OIDC Provider + **3 Roles IRSA** com privilégio mínimo (`evaluation-irsa-role`, `analytics-irsa-role`, `keda-irsa-role`). |

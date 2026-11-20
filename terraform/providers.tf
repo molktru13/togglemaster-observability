@@ -5,7 +5,7 @@ provider "aws" {
     tags = {
       Project     = "ToggleMaster"
       Environment = "production"
-      Phase       = "Fase-03"
+      Phase       = "Fase-04"
       Turma       = "4DCLT"
       ManagedBy   = "Terraform"
       Author      = "Marcilio-Alves-Galindo-RM374871"

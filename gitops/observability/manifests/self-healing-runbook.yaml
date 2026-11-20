@@ -116,7 +116,7 @@ spec:
       serviceAccountName: self-healing-sa
       containers:
         - name: self-healing-runbook
-          image: 290528720221.dkr.ecr.us-east-1.amazonaws.com/self-healing-runbook:latest
+          image: 740868193407.dkr.ecr.us-east-1.amazonaws.com/self-healing-runbook:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080

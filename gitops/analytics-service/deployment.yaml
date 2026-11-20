@@ -31,7 +31,7 @@ spec:
       serviceAccountName: analytics-sa
       containers:
         - name: analytics-service
-          image: 290528720221.dkr.ecr.us-east-1.amazonaws.com/analytics-service:v1.0.0-c169f83
+          image: 740868193407.dkr.ecr.us-east-1.amazonaws.com/analytics-service:v1.0.0-c169f83
           imagePullPolicy: Always
           ports:
             - containerPort: 8005
@@ -92,7 +92,7 @@ spec:
   triggers:
     - type: aws-sqs-queue
       metadata:
-        queueURL: https://sqs.us-east-1.amazonaws.com/290528720221/toggle-master-events
+        queueURL: https://sqs.us-east-1.amazonaws.com/740868193407/toggle-master-events
         queueLength: "5"
         awsRegion: "us-east-1"
         identityOwner: "operator"
