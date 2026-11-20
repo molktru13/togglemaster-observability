@@ -1,4 +1,4 @@
-name: "IaC Validation — Terraform"
+name: "IaC Validation — Terraform (fmt, validate, TFLint & Checkov)"
 
 on:
   push:
@@ -15,7 +15,7 @@ on:
 
 jobs:
   terraform-check:
-    name: "Terraform Format, Init & Validate"
+    name: "Terraform Format, Validate, TFLint & Checkov SAST"
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -37,3 +37,23 @@ jobs:
 
       - name: Terraform Validate
         run: terraform validate
+
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: v0.55.1
+
+      - name: TFLint — IaC Static Analysis & Best Practices
+        run: |
+          tflint --init
+          tflint --recursive
+
+      - name: Checkov — IaC SAST Security Scan
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: ./terraform
+          framework: terraform
+          config_file: ./terraform/.checkov.yaml
+          soft_fail: true
+          quiet: true
+          compact: true

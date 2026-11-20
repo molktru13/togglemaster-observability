@@ -103,7 +103,7 @@ Foram criados **5 workflows independentes** em `.github/workflows/` (um para cad
 - [`targeting-service-ci.yaml`](.github/workflows/targeting-service-ci.yaml) (Python)
 - [`evaluation-service-ci.yaml`](.github/workflows/evaluation-service-ci.yaml) (Go)
 - [`analytics-service-ci.yaml`](.github/workflows/analytics-service-ci.yaml) (Python)
-- [`terraform-validate.yaml`](.github/workflows/terraform-validate.yaml) (Terraform Format & Validate)
+- [`terraform-validate.yaml`](.github/workflows/terraform-validate.yaml) (Terraform Format, Validate, **TFLint** & **Checkov IaC SAST**)
 
 #### Estágios (Jobs) de cada Pipeline:
 
@@ -120,6 +120,8 @@ Foram criados **5 workflows independentes** em `.github/workflows/` (um para cad
    - Executa o **Container Scan com Trivy** (`trivy image --severity CRITICAL --exit-code 1`) na imagem recém-construída.
    - Autentica no **Amazon ECR** e publica a imagem com **tag imutável baseada no hash do commit** (`v1.0.0-<short_sha>`, ex: `v1.0.0-a1b2c3d`) além de `latest`.
    - Atualiza automaticamente o manifesto `gitops/<service>/deployment.yaml` com a nova tag gerada e realiza o commit/push (`[skip ci]`) no repositório.
+5. **Pipeline de Qualidade e Segurança de IaC (`terraform-validate.yaml`):**
+   - Executa validação de formatação (`terraform fmt -check -recursive`), inicialização e validação sintática (`terraform validate`), análise estática de boas práticas com **TFLint** (`terraform/.tflint.hcl`) e análise SAST de políticas de segurança Cloud/IaC com **Checkov** (`terraform/.checkov.yaml`).
 
 ---
 
@@ -151,6 +153,8 @@ togglemaster-terraform-iam/
 │       ├── analytics-service-ci.yaml
 │       └── terraform-validate.yaml
 ├── terraform/                      # Infraestrutura como Código (100% Terraform)
+│   ├── .tflint.hcl                 # Configuração do TFLint (IaC Linter)
+│   ├── .checkov.yaml               # Configuração do Checkov (IaC SAST)
 │   ├── bootstrap/                  # Criação do Bucket S3 para o Backend Remoto
 │   ├── backend.tf                  # Backend S3 com use_lockfile = true
 │   ├── providers.tf                # Providers AWS, Kubernetes, Helm e TLS
@@ -275,7 +279,7 @@ Invoke-RestMethod -Uri "http://$nlb/analytics/health"
 |---|---|
 | **Infraestrutura como Código (IaC)** | Terraform 1.11+, Backend Remoto Amazon S3 (`use_lockfile = true`), 9 Módulos Terraform |
 | **Identidade e Segurança Cloud** | AWS IAM (Opção B: Conta Pessoal), OIDC Provider, IRSA, AWS Secrets Manager, Security Groups |
-| **CI & DevSecOps** | GitHub Actions, Go Test, Unittest, `golangci-lint`, `Flake8`, **Gosec (SAST)**, **Bandit (SAST)**, **Trivy FS (SCA)**, **Trivy Image (Container Scan)** |
+| **CI & DevSecOps** | GitHub Actions, Go Test, Unittest, `golangci-lint`, `Flake8`, **Gosec (SAST)**, **Bandit (SAST)**, **Trivy FS (SCA)**, **Trivy Image (Container Scan)**, **TFLint (IaC Linter)**, **Checkov (IaC SAST)** |
 | **CD & GitOps** | **ArgoCD** (Auto-Sync, Self-Heal, Prune), Manifestos Declarativos Kubernetes |
 | **Orquestração & Escalabilidade** | Amazon EKS (Kubernetes 1.31), Helm, Nginx Ingress Controller (NLB), Metrics Server, HPA, KEDA |
 | **Bancos de Dados & Mensageria** | 3× Amazon RDS PostgreSQL, Amazon ElastiCache Redis 7, Amazon DynamoDB, Amazon SQS |
