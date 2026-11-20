@@ -33,7 +33,7 @@ spec:
       serviceAccountName: evaluation-sa
       containers:
         - name: evaluation-service
-          image: 740868193407.dkr.ecr.us-east-1.amazonaws.com/evaluation-service:v1.0.0-6f23eb9
+          image: 740868193407.dkr.ecr.us-east-1.amazonaws.com/evaluation-service:v1.0.0-dc9be0e
           imagePullPolicy: Always
           ports:
             - containerPort: 8004
